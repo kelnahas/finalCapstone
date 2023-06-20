@@ -19,7 +19,7 @@ Follow the steps below to install and run the project locally.
 # Usage
 The program is interactive and provides a menu-based interface for the user. Below is an overview of how to use the application.
 
-1. **Login or Register**: When the program starts, you will be prompted to login. If you don't have an account, you can register a new one.
+1. **Login or Register**: When the program starts, you will be prompted to login (Default User: admin Password: password. If you don't have an account, you can register a new one. 
 
 2. **The Main Menu** provides several options:
    - `R`: Register a new user
