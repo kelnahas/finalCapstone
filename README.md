@@ -26,6 +26,7 @@ The program is interactive and provides a menu-based interface for the user. Bel
    - `A`: Add a new task
    - `VA`: View all tasks
    - `VM`: View tasks assigned to the current user
+   - `E`: to edit a task
    - `DS`: Display task statistics
    - `GR`: Generate reports
    - `X`: Exit the application
