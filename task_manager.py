@@ -36,7 +36,7 @@ for t_str in task_data:
     task_list.append(current_task)
 
 #====Login Section====
-'''This code reads usernames and password from the user.txt file to 
+'''This code reads usernames and password from the user.txt file to
     allow a user to login.
 '''
 # If no user.txt file, write one with a default account
@@ -55,6 +55,7 @@ for user in user_data:
     username_password[username] = password
 
 logged_in = False
+is_admin = False  # Variable to check if the user is an admin
 while not logged_in:
     print("LOGIN")
     current_user = input("Username: ")
@@ -66,12 +67,18 @@ while not logged_in:
         print("Wrong password")
         continue
     else:
+        if current_user == 'admin':
+            is_admin = True
         print("Login Successful!")
         logged_in = True
 
 
 def reg_user():
     # Function to register a new user
+    if not is_admin:
+        print("Only the admin user can register a new user.")
+        return
+
     new_username = input("New Username: ")
     new_password = input("New Password: ")
     confirm_password = input("Confirm Password: ")
@@ -169,17 +176,19 @@ def view_mine():
         print(f"Completed: {'Yes' if task['completed'] else 'No'}")
         print()
 
-        print("Enter 'C' to mark the task as complete or 'E' to edit the task.")
+    if is_admin:
+        print("Enter 'E' to edit a task.")
         print("Enter 'X' to cancel and return to the main menu.")
         option = input("Option: ").upper()
 
-        if option == 'C':
-            mark_task_complete(task_list.index(task))
-        elif option == 'E':
-            edit_task(task_list.index(task))
+        if option == 'E':
+            task_index = int(input("Enter the task number you want to edit: ")) - 1
+            if task_index >= 0 and task_index < len(my_tasks):
+                edit_task(task_list.index(my_tasks[task_index]))
+            else:
+                print("Invalid task number.")
         elif option == 'X':
             print("Returning to the main menu.")
-            break
         else:
             print("Invalid Choice. Returning to the main menu.")
 
@@ -208,23 +217,17 @@ def edit_task(task_index):
     print(f"Due Date: {task['due_date'].strftime(DATETIME_STRING_FORMAT)}")
     print()
 
-    print("Enter 'U' to update the username or 'D' to update the due date.")
-    print("Enter 'X' to cancel and return to the main menu.")
+    print("Enter 'T' to update the task title, 'I' to update the task information, or 'X' to cancel and return to the main menu.")
     option = input("Option: ").upper()
 
-    if option == 'U':
-        new_username = input("Enter new username: ")
-        task['username'] = new_username
-        print("Task username updated.")
-    elif option == 'D':
-        while True:
-            try:
-                new_due_date = input("Enter new due date (YYYY-MM-DD): ")
-                task['due_date'] = datetime.strptime(new_due_date, DATETIME_STRING_FORMAT)
-                print("Task due date updated.")
-                break
-            except ValueError:
-                print("Invalid datetime format. Please use the format specified.")
+    if option == 'T':
+        new_title = input("Enter new task title: ")
+        task['title'] = new_title
+        print("Task title updated.")
+    elif option == 'I':
+        new_info = input("Enter new task information: ")
+        task['description'] = new_info
+        print("Task information updated.")
     elif option == 'X':
         print("Task edit canceled.")
     else:
@@ -233,6 +236,10 @@ def edit_task(task_index):
 
 def generate_reports():
     # Function to generate reports
+    if not is_admin:
+        print("Only the admin user can generate reports.")
+        return
+
     generate_task_report()
     generate_user_report()
 
@@ -314,13 +321,14 @@ def generate_user_report():
     print("Report file: user_overview.txt")
 
 
+
 def display_statistics():
-    # Function to display task statistics
+    # Function to display task and user statistics
     total_tasks = len(task_list)
     completed_tasks = sum(task['completed'] for task in task_list)
     incomplete_tasks = total_tasks - completed_tasks
 
-    print("===== Statistics =====")
+    print("===== Task Statistics =====")
     print(f"Total Tasks: {total_tasks}")
     print(f"Completed Tasks: {completed_tasks}")
     print(f"Incomplete Tasks: {incomplete_tasks}")
@@ -337,6 +345,51 @@ def display_statistics():
         print(f"Percentage of Incomplete Tasks: {incomplete_percentage:.2f}%")
         print(f"Percentage of Overdue Tasks: {overdue_percentage:.2f}%")
 
+    print("\n===== User Statistics =====")
+    try:
+        with open("user_overview.txt", "r") as user_overview_file:
+            user_overview = user_overview_file.read()
+            print(user_overview)
+    except FileNotFoundError:
+        print("User overview statistics not found.")
+
+def edit_task(task_index):
+    # Function to edit a task
+    task = task_list[task_index]
+    if task['completed']:
+        print("Cannot edit a completed task.")
+        return
+
+    print(f"Task {task_index + 1}:")
+    print(f"Title: {task['title']}")
+    print(f"Assigned to: {task['username']}")
+    print(f"Due Date: {task['due_date'].strftime(DATETIME_STRING_FORMAT)}")
+    print()
+
+    print("Enter 'T' to update the task title, 'I' to update the task information, or 'X' to cancel and return to the main menu.")
+    option = input("Option: ").upper()
+
+    if option == 'T':
+        new_title = input("Enter new task title: ")
+        task['title'] = new_title
+        print("Task title updated.")
+    elif option == 'I':
+        new_info = input("Enter new task information: ")
+        task['description'] = new_info
+        print("Task information updated.")
+    elif option == 'X':
+        print("Task edit canceled.")
+    else:
+        print("Invalid Choice. Task edit canceled.")
+
+    # Update the tasks.txt file with the modified task information
+    with open("tasks.txt", "w") as task_file:
+        task_list_to_write = []
+        for t in task_list:
+            task_str = f"{t['username']};{t['title']};{t['description']};{t['due_date'].strftime(DATETIME_STRING_FORMAT)};{t['assigned_date'].strftime(DATETIME_STRING_FORMAT)};{'Yes' if t['completed'] else 'No'}\n"
+            task_list_to_write.append(task_str)
+        task_file.write("".join(task_list_to_write))
+
 # Main program loop
 while True:
     print("TASK MANAGEMENT MENU")
@@ -344,8 +397,10 @@ while True:
     print("Enter 'A' to add a task")
     print("Enter 'VA' to view all tasks")
     print("Enter 'VM' to view my tasks")
-    print("Enter 'DS' to display task statistics")
-    print("Enter 'GR' to generate reports")
+    if is_admin:
+        print("Enter 'E' to edit a task")
+        print("Enter 'DS' to display task statistics")
+        print("Enter 'GR' to generate reports")
     print("Enter 'X' to exit")
 
     option = input("Option: ").upper()
@@ -358,6 +413,15 @@ while True:
         view_all()
     elif option == 'VM':
         view_mine()
+    elif option == 'E':
+        if is_admin:
+            task_index = int(input("Enter the task number you want to edit: ")) - 1
+            if task_index >= 0 and task_index < len(task_list):
+                edit_task(task_index)
+            else:
+                print("Invalid task number.")
+        else:
+            print("Only the admin user can edit tasks.")
     elif option == 'DS':
         display_statistics()
     elif option == 'GR':
